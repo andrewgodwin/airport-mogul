@@ -1,0 +1,16 @@
+MANIFEST
+HISTORY
+setup.py
+Polygon/__init__.py
+Polygon/IO.py
+Polygon/Utils.py
+Polygon/Shapes.py
+doc/Polygon.txt
+doc/Examples.py
+doc/testpoly.gpf
+src/gpc.c
+src/gpc.h
+src/cPolygon.c
+src/PolyUtil.c
+src/PolyUtil.h
+test/Test.py
