@@ -1,6 +1,6 @@
 
 from Polygon import Polygon
-from world.locdict import LocDict
+from world.locdict import ItemDict
 
 class Room(object):
     
@@ -11,7 +11,7 @@ class Room(object):
     def __init__(self, expanse, type):
         self.expanse = expanse
         self.type = type
-        self.items = LocDict()
+        self.items = ItemDict()
     
     @classmethod
     def from_coords(cls, expanse, type, coords):

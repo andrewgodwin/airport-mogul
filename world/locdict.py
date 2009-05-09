@@ -90,7 +90,36 @@ class ItemDict(LocDict):
         Adds the item at x,y with rotation rot (one of 0, 1, 2, 3 - number
         of 90deg rotations anticlockwise.)
         """
-        pass
+        # Remove it if it's already here
+        if item in self._items:
+            self.remove(item)
+        # First, grow to fit it
+        w, h = item.size()
+        if rot % 2:
+            w, h = h, w
+        self.grow_to_size(x+w, y+h)
+        # Then, add it to the squares
+        squares = []
+        for dx, dy in item.shape:
+            nx, ny = dx+x, dy+y
+            squares.append((nx, ny))
+            # Make sure it's a set
+            if self._grid[nx][ny] is None:
+                self._grid[nx][ny] = set()
+            # Stick it into the set
+            self._grid[nx][ny].add(item)
+        self._items = {item: squares}
+        item.origin = (x, y)
+        item.rotation = 90.0 * rot
+    
+    
+    def remove(self, item):
+        """
+        Removes an item from the ItemDict.
+        """
+        for x, y in self._items[item]:
+            self._grid[x][y].remove(item)
+        del self._items[item]
 
 
     
