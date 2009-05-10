@@ -26,6 +26,10 @@ class World(object):
         self.doors.add(x1, y1, x2, y2, z)
     
     
+    def add_item(self, item, x, y, z, rot):
+        self.items.add(x, y, z, rot, item)
+    
+    
     
 
 def range2d(x, y, x2, y2, z):
@@ -44,8 +48,8 @@ def build_test_world():
     room = Room.from_coords(world, "lounge", range2d(1, 1, 3, 9, 0))
     world.add_door(3, 2, 3, 3, 0)
     
-    #item = Item("departures-board", "Departures Board", USES_NONFLOOR)
-    #room.add_item(
+    item = Item("departures-board", "Departures Board", "screens", USES_NONFLOOR)
+    world.add_item(item, 5, 5, 0, 0)
     
     print "Built test world."
     

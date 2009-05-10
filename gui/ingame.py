@@ -87,6 +87,8 @@ class InGameController(BaseController):
         self.create_outer_walls(self.world)
         for room in self.world.rooms:
             self.create_room(self.world, room)
+        for item in self.world.items:
+            self.create_item(self.world, item)
         
         # Add a test Person
         self.people = self.root.attachNewNode("People")
@@ -391,6 +393,16 @@ class InGameController(BaseController):
         floor_nodepath.setTexture(tex)
         # Load on the door models
         self.create_doors(root, world.doors)
+    
+    
+    def create_item(self, world, item):
+        "Creates a node for an Item and sticks a model in it."
+        # Make a new node for the item
+        item_root = self.root.attachNewNode(item.name)
+        item_root.setPos(*item.origin)
+        # Load a model, add it
+        model = loader.loadModel("items/%s" % item.model)
+        model.reparentTo(item_root)
 
 
 class PersonModel(object):

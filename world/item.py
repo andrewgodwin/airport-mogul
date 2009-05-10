@@ -18,9 +18,10 @@ class Item(object):
     line of each axis.
     """
     
-    def __init__(self, name, title, occupies=USES_ALL, shape=((0,0),)):
+    def __init__(self, name, title, model=None, occupies=USES_ALL, shape=((0,0),)):
         self.name = name
         self.title = title
+        self.model = model or self.name
         self.occupies = occupies
         self.shape = shape
     
