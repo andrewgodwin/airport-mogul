@@ -53,7 +53,7 @@ class InGameController(BaseController):
         self.camera.setHpr(-45, 0, 0)
         
         base.camera.reparentTo(self.camera)
-        base.camera.setPos(0, -60, 60)
+        base.camera.setPos(0, -20, 20)
         base.camera.setHpr(0, -20, 0)
         base.camera.lookAt(self.camera)
         
@@ -174,7 +174,7 @@ class InGameController(BaseController):
         geom.addPrimitive(prim)
         node = GeomNode('base_layer')
         node.addGeom(geom)
-        tex = loader.loadTexture('textures/grass.png')
+        tex = loader.loadTexture('textures/grass.png', minfilter=Texture.FTLinearMipmapLinear)
         node_path = self.root.attachNewNode(node)
         node_path.setTexture(tex)
     
