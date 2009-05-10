@@ -84,10 +84,9 @@ class InGameController(BaseController):
         
         # Set up game world
         self.create_base()
-        for expanse in self.world.get_expanses():
-            root = self.create_expanse(self.world, expanse)
-            for room in expanse:
-                self.create_room(expanse, room)
+        self.create_outer_walls(self.world)
+        for room in self.world.rooms:
+            self.create_room(self.world, room)
         
         # Add a test Person
         self.people = self.root.attachNewNode("People")
@@ -184,73 +183,80 @@ class InGameController(BaseController):
         vdata, vertex, color, texcoord = make_vertex_data("base_layer")
         prim = GeomTristrips(Geom.UHStatic)
         doors = set()
-        # Loop through each coord...
         draw_walls = [] # Two 2D points for the wall, one 2D vector for the width, one for the taper either end.
-        for x, y in locdict.coords_for_item(item):
+        # Outside walls don't have a particular item
+        if inside:
+            coords = locdict.coords_for_item(item)
+            test = lambda x: x is item
+        else:
+            coords = item
+            test = lambda x: x is not None
+        # Loop through each coord...
+        for x, y, z in coords:
             # Test to see which sides of this coord are exposed.
-            if locdict.get(x-1, y) is not item:
+            if not test(locdict.get(x-1, y, z)):
                 # Determine what kind of corners either end has
-                c1 = locdict.get(x, y-1) is not item
-                c2 = locdict.get(x, y+1) is not item
-                ic1 = locdict.get(x-1, y-1) is item
-                ic2 = locdict.get(x-1, y+1) is item
+                c1 = not test(locdict.get(x, y-1, z))
+                c2 = not test(locdict.get(x, y+1, z))
+                ic1 = test(locdict.get(x-1, y-1, z))
+                ic2 = test(locdict.get(x-1, y+1, z))
                 # Correctly swap if we're doing an inside wall
                 if inside:
-                    wall = (x, y+1, x, y, w, 0)
+                    wall = (x, y+1, x, y, z, w, 0)
                     c1, c2, ic1, ic2 = c2, c1, ic2, ic1
                 else:
-                    wall = (x, y, x, y+1, -w, 0)
+                    wall = (x, y, x, y+1, z, -w, 0)
                 # Work out what kind of chamfer is needed
                 chamfer = (0, -w if c1 else w if ic1 else 0, 0, w if c2 else -w if ic2 else 0)
                 draw_walls.append(wall + chamfer)
-            if locdict.get(x+1, y) is not item:
+            if not test(locdict.get(x+1, y, z)):
                 # Determine what kind of corners either end has
-                c1 = locdict.get(x, y+1) is not item
-                c2 = locdict.get(x, y-1) is not item
-                ic1 = locdict.get(x+1, y+1) is item
-                ic2 = locdict.get(x+1, y-1) is item
+                c1 = not test(locdict.get(x, y+1, z))
+                c2 = not test(locdict.get(x, y-1, z))
+                ic1 = test(locdict.get(x+1, y+1, z))
+                ic2 = test(locdict.get(x+1, y-1, z))
                 # Correctly swap if we're doing an inside wall
                 if inside:
-                    wall = (x+1, y, x+1, y+1, -w, 0)
+                    wall = (x+1, y, x+1, y+1, z, -w, 0)
                     c1, c2, ic1, ic2 = c2, c1, ic2, ic1
                 else:
-                    wall = (x+1, y+1, x+1, y, w, 0)
+                    wall = (x+1, y+1, x+1, y, z, w, 0)
                 # Work out what kind of chamfer is needed
                 chamfer = (0, w if c1 else -w if ic1 else 0, 0, -w if c2 else w if ic2 else 0)
                 draw_walls.append(wall + chamfer)
-            if locdict.get(x, y-1) is not item:
+            if not test(locdict.get(x, y-1, z)):
                 # Determine what kind of corners either end has
-                c1 = locdict.get(x+1, y) is not item
-                c2 = locdict.get(x-1, y) is not item
-                ic1 = locdict.get(x+1, y-1) is item
-                ic2 = locdict.get(x-1, y-1) is item
+                c1 = not test(locdict.get(x+1, y, z))
+                c2 = not test(locdict.get(x-1, y, z))
+                ic1 = test(locdict.get(x+1, y-1, z))
+                ic2 =  test(locdict.get(x-1, y-1, z))
                 # Correctly swap if we're doing an inside wall
                 if inside:
-                    wall = (x, y, x+1, y, 0, w)
+                    wall = (x, y, x+1, y, z, 0, w)
                     c1, c2, ic1, ic2 = c2, c1, ic2, ic1
                 else:
-                    wall = (x+1, y, x, y, 0, -w)
+                    wall = (x+1, y, x, y, z, 0, -w)
                 # Work out what kind of chamfer is needed
                 chamfer = (w if c1 else -w if ic1 else 0, 0, -w if c2 else w if ic2 else 0, 0)
                 draw_walls.append(wall + chamfer)
-            if locdict.get(x, y+1) is not item:
+            if not test(locdict.get(x, y+1, z)):
                 # Determine what kind of corners either end has
-                c1 = locdict.get(x-1, y) is not item
-                c2 = locdict.get(x+1, y) is not item
-                ic1 = locdict.get(x-1, y+1) is item
-                ic2 = locdict.get(x+1, y+1) is item
+                c1 = not test(locdict.get(x-1, y, z))
+                c2 = not test(locdict.get(x+1, y, z))
+                ic1 = test(locdict.get(x-1, y+1, z))
+                ic2 = test(locdict.get(x+1, y+1, z))
                 # Correctly swap if we're doing an inside wall
                 if inside:
-                    wall = (x+1, y+1, x, y+1, 0, -w)
+                    wall = (x+1, y+1, x, y+1, z, 0, -w)
                     c1, c2, ic1, ic2 = c2, c1, ic2, ic1
                 else:
-                    wall = (x, y+1, x+1, y+1, 0, w)
+                    wall = (x, y+1, x+1, y+1, z, 0, w)
                 # Work out what kind of chamfer is needed
                 chamfer = (-w if c1 else w if ic1 else 0, 0, w if c2 else -w if ic2 else 0, 0)
                 draw_walls.append(wall + chamfer)
         # For each wall in the lot we have to draw, make it.
         # (note: only one half of the wall is drawn; outer for expanses, inner for rooms)
-        for x, y, x2, y2, dx, dy, t1x, t1y, t2x, t2y in draw_walls:
+        for x, y, x2, y2, z, dx, dy, t1x, t1y, t2x, t2y in draw_walls:
             # Work out the correct UV coords offset to get the textures straight
             if x2 != x:
                 du1 = t1x / (x2 - x)
@@ -259,7 +265,7 @@ class InGameController(BaseController):
                 du1 = t1y / (y2 - y) 
                 du2 = t2y / (y2 - y)
             # Is there a door on this wall?
-            if (x, y, x2, y2) in doordict:
+            if (x, y, x2, y2, z) in doordict:
                 ## Params ##
                 dw = 0.8 # Width of door
                 dh = 0.65 # Height of door
@@ -315,7 +321,7 @@ class InGameController(BaseController):
     def create_doors(self, root, doors):
         "Adds in the door models (they're premade, rather than generated)."
         door_root = root.attachNewNode("DoorRoot")
-        for x, y, x2, y2 in doors:
+        for x, y, x2, y2, z in doors:
             if x == x2:
                 rot = 90
             else:
@@ -332,14 +338,14 @@ class InGameController(BaseController):
         vdata, vertex, color, texcoord = make_vertex_data("polygon")
         prim = GeomTristrips(Geom.UHStatic)
         # Add each tile
-        for x, y in locdict.coords_for_item(item):
+        for x, y, z in locdict.coords_for_item(item):
             for x, y, tx, ty in (
                     (x, y+1, 0, 1),
                     (x, y, 0, 0),
                     (x+1, y+1, 1, 1),
                     (x+1, y, 1, 0),
                 ):
-                vertex.addData3f(x, y, 0)
+                vertex.addData3f(x, y, z)
                 color.addData4f(1, 1, 1, 1)
                 texcoord.addData2f(tx, ty)
             prim.addNextVertices(4) 
@@ -350,10 +356,10 @@ class InGameController(BaseController):
         return geom
     
     
-    def create_expanse(self, world, expanse):
+    def create_outer_walls(self, world):
         "Creates the model for an Expanse (i.e. outer walls; floors come from Rooms)."
         # Make a geom for the walls
-        geom = self.create_wall(expanse, world.get_floor(expanse.floor), expanse.doors)
+        geom = self.create_wall(world.rooms.all_coords(), world.rooms, world.doors)
         wall_node = GeomNode('walls')
         wall_node.addGeom(geom)
         # Add a nodepath 'n' texture
@@ -364,14 +370,14 @@ class InGameController(BaseController):
         return root
     
     
-    def create_room(self, expanse, room):
+    def create_room(self, world, room):
         "Creates the model for an Room (i.e. inner walls and a floor)."
         # Make a geom for the walls
-        geom = self.create_wall(room, expanse.rooms, expanse.doors, inside=True)
+        geom = self.create_wall(room, world.rooms, world.doors, inside=True)
         wall_node = GeomNode('walls')
         wall_node.addGeom(geom)
         # And one for the floor
-        geom = self.create_floor(room, expanse.rooms)
+        geom = self.create_floor(room, world.rooms)
         floor_node = GeomNode('floor')
         floor_node.addGeom(geom)
         # Attach and combine
@@ -384,7 +390,7 @@ class InGameController(BaseController):
         tex = loader.loadTexture(self.ROOM_TEXTURES[room.type][1])
         floor_nodepath.setTexture(tex)
         # Load on the door models
-        self.create_doors(root, expanse.doors)
+        self.create_doors(root, world.doors)
 
 
 class PersonModel(object):

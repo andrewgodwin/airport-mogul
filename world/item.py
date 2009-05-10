@@ -1,4 +1,6 @@
 
+from world.constants import *
+
 class Item(object):
     """
     Base class for an item - something that sits on the map, or in a room,
@@ -16,14 +18,11 @@ class Item(object):
     line of each axis.
     """
     
-    occupies = 7
-    shape = [(0, 0)]
-    
-    @classmethod
-    def from_defn(cls, defn):
-        item = cls()
-        item.model_name = defn['model']
-        
+    def __init__(self, name, title, occupies=USES_ALL, shape=((0,0),)):
+        self.name = name
+        self.title = title
+        self.occupies = occupies
+        self.shape = shape
     
     def size(self):
         "Returns the size of this item's bounding box"
@@ -34,3 +33,4 @@ class Item(object):
             if y > y1:
                 y1 = y
         return x1+1, y1+1
+

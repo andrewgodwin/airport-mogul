@@ -11,10 +11,9 @@ class Room(object):
     def __init__(self, expanse, type):
         self.expanse = expanse
         self.type = type
-        self.items = ItemDict()
     
     @classmethod
-    def from_coords(cls, expanse, type, coords):
-        instance = cls(expanse, type)
-        expanse.add_room(instance, coords)
+    def from_coords(cls, world, type, coords):
+        instance = cls(world, type)
+        world.add_room(instance, coords)
         return instance

@@ -3,58 +3,62 @@ class LocDict(object):
     
     """
     A 'location dictionary', i.e. one that contains items referenced by location
-    (their sets of covered squares). Should probably be a quadtree.
+    (their sets of covered squares). Should probably be a set of quadtrees.
     """
     
     def __init__(self):
         
-        self._grid = []
+        self._grids = {}
         self._items = {}
-        self.size = [0, 0]
+        self._sizes = {}
     
     
-    def grow_to_size(self, width, height):
+    def grow_to_size(self, width, height, z):
         "Increases the size of the items grid to the given size."
         
+        # Make sure there's a level at z
+        if z not in self._grids:
+            self._grids[z] = []
+            self._sizes[z] = [0, 0]
         # Extend it in the x direction
-        if width > self.size[0]:
-            self._grid.extend([[None] * max(height, self.size[1]) for i in range(width - len(self._grid))])
-            self.size[0] = width
+        if width > self._sizes[z][0]:
+            self._grids[z].extend([[None] * max(height, self._sizes[z][1]) for i in range(width - len(self._grids[z]))])
+            self._sizes[z][0] = width
         # And the y direction
-        if height > self.size[1]:
-            for column in self._grid:
+        if height > self._sizes[z][1]:
+            for column in self._grids[z]:
                 column.extend([None] * (height - len(column)))
-            self.size[1] = height
+            self._sizes[z][1] = height
     
     
-    def add(self, x, y, item):
+    def add(self, x, y, z, item):
         "Adds an item to the LocDict at the given coords."
         # Make sure we're big enough.
-        self.grow_to_size(x+1, y+1)
+        self.grow_to_size(x+1, y+1, z)
         # Remove anything previously there
-        self.clear(x, y)
+        self.clear(x, y, z)
         # Add it to the grid and list of items.
-        self._grid[x][y] = item
+        self._grids[z][x][y] = item
         if item not in self._items:
-            self._items[item] = [(x, y)]
+            self._items[item] = [(x, y, z)]
         else:
-            self._items[item].append((x, y))
+            self._items[item].append((x, y, z))
     
     
-    def clear(self, x, y):
-        "Removes whatever was at x, y."
-        item = self._grid[x][y]
+    def clear(self, x, y, z):
+        "Removes whatever was at x, y, z."
+        item = self._grids[z][x][y]
         if item is not None:
-            self._grid[x][y] = None
-            self._items[item].remove((x, y))
+            self._grids[z][x][y] = None
+            self._items[item].remove((x, y, z))
             if not self._items[item]:
                 del self._items[item]
     
     
-    def get(self, x, y):
-        "Returns the item at (x, y)"
+    def get(self, x, y, z):
+        "Returns the item at (x, y, z)"
         try:
-            return self._grid[x][y]
+            return self._grids[z][x][y]
         except IndexError:
             return None
     
@@ -69,6 +73,12 @@ class LocDict(object):
     
     def coords_for_item(self, item):
         return self._items[item]
+    
+    
+    def all_coords(self):
+        for item, coords in self._items.items():
+            for coord in coords:
+                yield coord
 
 
 
@@ -131,26 +141,26 @@ class DoorDict(object):
         self.doors = set()
     
     
-    def normalise(self, x, y, x2, y2):
+    def normalise(self, x, y, x2, y2, z):
         "Ensures coordinates are always in a consistent order."
         if x > x2:
             x, y, x2, y2 = x2, y2, x, y
         else:
             if y > y2:
                 x, y, x2, y2 = x2, y2, x, y
-        return x, y, x2, y2
+        return x, y, x2, y2, z
     
     
-    def __contains__(self, (x, y, x2, y2)):
-        return self.normalise(x, y, x2, y2) in self.doors
+    def __contains__(self, (x, y, x2, y2, z)):
+        return self.normalise(x, y, x2, y2, z) in self.doors
     
     
-    def add(self, x, y, x2, y2):
-        self.doors.add(self.normalise(x, y, x2, y2))
+    def add(self, x, y, x2, y2, z):
+        self.doors.add(self.normalise(x, y, x2, y2, z))
     
     
-    def remove(self, x, y, x2, y2):
-        self.doors.remove(self.normalise(x, y, x2, y2))
+    def remove(self, x, y, x2, y2, z):
+        self.doors.remove(self.normalise(x, y, x2, y2, z))
     
     
     def __iter__(self):
