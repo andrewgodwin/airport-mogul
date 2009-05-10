@@ -79,6 +79,10 @@ class InGameController(BaseController):
         self.accept("e", lambda: self.set_rotate(-1))
         self.accept("e-up", lambda: self.set_rotate(0))
         
+        self.accept("mouse1", self.mouse1_pressed)
+        
+        self.prepare_mouse_picker()
+        
         self.pan_dir = [0, 0]
         self.rotate_speed = 0
         
@@ -155,6 +159,37 @@ class InGameController(BaseController):
             0,
         )
         return Task.cont
+
+    
+    def prepare_mouse_picker(self):
+        self.pickerRay = CollisionRay()
+        self.picker = CollisionTraverser()
+        self.queue = CollisionHandlerQueue()
+        self.pickerNode = CollisionNode('mouseRay')
+        self.pickerNP = camera.attachNewNode(self.pickerNode)
+        self.pickerNP.show()
+        self.pickerNode.setFromCollideMask(GeomNode.getDefaultCollideMask())
+        self.pickerNode.addSolid(self.pickerRay)        
+        self.picker.addCollider(self.pickerNP, self.queue)
+        self.picker.showCollisions(base.camera)
+
+    
+    def pick_from_coords(self, x, y):
+        base.camera.ls()
+        self.pickerRay.setFromLens(base.camNode, x, y)
+        self.picker.traverse(render)
+        if (self.queue.getNumEntries() > 0):
+            self.queue.sortEntries()
+            obj = self.queue.getEntry(0).getIntoNodePath()
+            self.floorPosition = self.queue.getEntry(0).getSurfacePoint(obj)
+    
+    
+    def mouse1_pressed(self):
+        if base.mouseWatcherNode.hasMouse():
+            x = base.mouseWatcherNode.getMouseX()
+            y = base.mouseWatcherNode.getMouseY()
+            print "Mouse at:", x, y
+            self.pick_from_coords(x, y)
     
     
     def create_base(self):
