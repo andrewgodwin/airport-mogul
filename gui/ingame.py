@@ -8,6 +8,7 @@ from geometry import enlarge_polygon, enlarge_edge
 
 from pandac.PandaModules import *
 import direct.directbase.DirectStart
+from direct.gui.DirectGui import *
 from direct.task import Task
 
 #This task runs for two seconds, then prints done
@@ -93,6 +94,8 @@ class InGameController(BaseController):
             self.create_room(self.world, room)
         for item in self.world.items:
             self.create_item(self.world, item)
+        
+        self.create_gui()
         
         # Add a test Person
         self.people = self.root.attachNewNode("People")
@@ -191,6 +194,33 @@ class InGameController(BaseController):
             print "Mouse at:", x, y
             self.pick_from_coords(x, y)
     
+    def create_gui(self):
+        "Creates the 2D GUI."
+        
+        # Make a panel along the top
+        self.panel = self.gui.load_texture_card(self.gui.p2dts, None, 2, 25)
+        self.panel.setColor(0,0,0,1)
+        self.panel.setPos(0, 0, -12)
+        self.corner_right = self.gui.load_texture_card(self.gui.p2dtr, "gui/corner", 16, 16)
+        self.corner_right.setPos(-8, 0, -33)
+        self.corner_left = self.gui.load_texture_card(self.gui.p2dtl, "gui/corner", -16, 16)
+        self.corner_left.setPos(8, 0, -33)
+        self.cleanable += ["panel", "corner_right"]
+        # Load a font, make it nice
+        panel_font = loader.loadFont('DroidSans.ttf')
+        panel_font.clear()
+        panel_font.setPixelsPerUnit(40)
+        
+        # Add a 'clock'
+        self.clock = OnscreenText(text="20:14", parent=self.gui.p2dtr, mayChange=True, fg=(1,1,1,1), bg=(0,0,0,0), scale=16, align=TextNode.ARight, font=panel_font)
+        self.clock.setPos(-6, -18)
+        self.cleanable.append("clock") 
+        
+        
+        # And the build buttons along the bottom
+        #self.bottom_panel = self.gui.p2dbc.attachNewNode("bottom_panel")
+        #self.bottom_panel.setPos(0, 0, 35)
+        #self.room_button = self.gui.load_texture_card(self.bottom_panel, "gui/build_room", 48, 48)
     
     def create_base(self):
         "Creates the base layer (i.e. a rectangle of grass)"

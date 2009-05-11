@@ -24,7 +24,7 @@ class Gui(DirectObject):
 
     def setup_panda(self):
         "Initialises the Panda3D parts."
-        
+
         # Tell Panda we really want to use our own data dirs.
         self.dataPath = os.path.join(os.path.dirname(__file__), "..", "data")
         loadPrcFileData("", "model-path %s" % self.dataPath)
@@ -32,16 +32,17 @@ class Gui(DirectObject):
         loadPrcFileData("", "model-path %s/textures/" % self.dataPath)
         loadPrcFileData("", "texture-path %s/textures/" % self.dataPath)
         loadPrcFileData("", "texture-path %s/gui/" % self.dataPath)
-        
+        loadPrcFileData("", "model-path %s/fonts/" % self.dataPath)
+
         # Make that basic window a bit better.
         base.setBackgroundColor(0,0,0)
         base.enableParticles()
-        
+
         # Create the pixel-perfect nodes
         self.addPixelNodes()
         self.accept("aspectRatioChanged", self.scalePixelNodes)
-    
-    
+
+
     def test_launch(self):
         from gui.ingame import InGameController
         InGameController(self)
@@ -91,6 +92,32 @@ class Gui(DirectObject):
 
         for p2node in [self.p2dts, self.p2dcs, self.p2dbs]:
             p2node.setScale(render2d, 1, 1, 2.0/screenh)
+
+
+    def load_texture_card(self, parent, texture, width, height, offsetx=0.5, offsety=0.5, transparent=True):
+        """Loads an image and sticks it onto a square card for display, parented to 'parent'.
+	If 'texture' is none, will just generate a card instead.
+	offsetx and offsety specify the offset of the card; (0,0) means the card's origin is
+	at its top left corner."""
+
+        cm = CardMaker('card-%s' % texture)
+        cm.setFrame(-(width*offsetx), (width*(1-offsetx)), -(height*offsety), (height*(1-offsety)))
+        node = parent.attachNewNode(cm.generate())
+        if texture:
+            tex = loader.loadTexture(texture + ".png")
+            if tex is None:
+                tex = loader.loadTexture(texture + ".jpg")
+            if tex is None:
+                tex = loader.loadTexture(texture + ".gif")
+            if tex is None:
+                tex = loader.loadTexture(texture)
+            if tex is None:
+                raise ValueError("No texture found matching '%s'." % texture)
+
+            node.setTexture(tex)
+            if transparent:
+                node.setTransparency(1)
+        return node
 
 
 
