@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 In-game controller and functions.
 """
@@ -9,6 +10,7 @@ from geometry import enlarge_polygon, enlarge_edge
 from pandac.PandaModules import *
 import direct.directbase.DirectStart
 from direct.gui.DirectGui import *
+from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
 #This task runs for two seconds, then prints done
@@ -81,6 +83,7 @@ class InGameController(BaseController):
         self.accept("e-up", lambda: self.set_rotate(0))
         
         self.accept("mouse1", self.mouse1_pressed)
+        self.accept("mouse1-up", self.mouse1_released)
         
         self.prepare_mouse_picker()
         
@@ -191,8 +194,12 @@ class InGameController(BaseController):
         if base.mouseWatcherNode.hasMouse():
             x = base.mouseWatcherNode.getMouseX()
             y = base.mouseWatcherNode.getMouseY()
-            print "Mouse at:", x, y
             self.pick_from_coords(x, y)
+    
+    
+    def mouse1_released(self):
+        pass
+    
     
     def create_gui(self):
         "Creates the 2D GUI."
@@ -205,17 +212,22 @@ class InGameController(BaseController):
         self.corner_right.setPos(-8, 0, -33)
         self.corner_left = self.gui.load_texture_card(self.gui.p2dtl, "gui/corner", -16, 16)
         self.corner_left.setPos(8, 0, -33)
-        self.cleanable += ["panel", "corner_right"]
+        self.cleanable += ["panel", "corner_right", "corner_left"]
+        
         # Load a font, make it nice
-        panel_font = loader.loadFont('DroidSans.ttf')
-        panel_font.clear()
-        panel_font.setPixelsPerUnit(40)
+        normal = self.gui.load_font("DroidSans")
+        bold = self.gui.load_font("DroidSans-Bold")
         
         # Add a 'clock'
-        self.clock = OnscreenText(text="20:14", parent=self.gui.p2dtr, mayChange=True, fg=(1,1,1,1), bg=(0,0,0,0), scale=16, align=TextNode.ARight, font=panel_font)
-        self.clock.setPos(-6, -18)
+        self.clock = OnscreenText(text="May 13  20:14", parent=self.gui.p2dtr, mayChange=True, fg=(1,1,1,1), bg=(0,0,0,0), scale=13, align=TextNode.ARight, font=bold)
+        self.clock.setPos(-8, -16)
         self.cleanable.append("clock") 
         
+        # A command line-ish thing
+        self.command_line_node = OnscreenText(text=u"» waiting command", parent=self.gui.p2dtl, mayChange=True, fg=(1,1,1,0.4), bg=(0,0,0,0), scale=13, align=TextNode.ALeft, font=bold)
+        self.command_line_node.setPos(8, -16)
+        self.command_line = CommandLine(self.command_line_node)
+        self.cleanable.append("command_line_node") 
         
         # And the build buttons along the bottom
         #self.bottom_panel = self.gui.p2dbc.attachNewNode("bottom_panel")
@@ -468,6 +480,68 @@ class InGameController(BaseController):
         # Load a model, add it
         model = loader.loadModel("items/%s" % item.model)
         model.reparentTo(item_root)
+
+
+
+class CommandLine(DirectObject):
+    
+    "Deals with the 'command line', the current way of doing actions."
+    
+    def __init__(self, cline):
+        # DiOb init
+        DirectObject.__init__(self)
+        # Stash the relavant stuff from the GUI
+        self.cline = cline
+        self.stack = []
+        # What are we doing, after all?
+        self.commands = {
+            "r": ("Build Room", {
+                "c": ("Corridor", self.build_corridor),
+                "b": ("Baggage Area", self.build_corridor),
+                "t": ("Toilets", self.build_corridor),
+            }),
+            "b": ("Build Item", {
+                "r": ("Runway", {
+                    "1": ("1km Runway", self.build_corridor),
+                    "2": ("2km Runway", self.build_corridor),
+                }),
+                "b": ("Baggage Area", self.build_corridor),
+                "t": ("Toilets", self.build_corridor),
+            }),
+        }
+        # Attach to a lot of signals
+        for char in "brtc12":
+            self.accept(char, (lambda char: lambda: self.letter_down(char))(char)) # Python scope fix.
+    
+    def build_corridor(self):
+        print "lol"
+    
+    def get_current_level(self):
+        level = self.commands
+        for key, label in self.stack:
+            level = level[key][1]
+        return level
+    
+    def letter_down(self, char):
+        level = self.get_current_level()
+        if char in level:
+            self.stack.append((char, level[char][0]))
+            self.show_stack()
+            if not isinstance(level[char][1], dict):
+                level[char][1]()
+                self.stack = []
+                self.cline.setFg((0.3,1,0.4,0.9))
+        else:
+            self.stack = []
+            self.show_error()
+    
+    def show_stack(self):
+        self.cline.setFg((1,1,1,0.9))
+        self.cline.setText(u" » ".join([label for char, label in self.stack]))
+    
+    def show_error(self):
+        self.cline.setFg((1,0.5,0.4,0.5))
+        self.cline.setText(u"« unknown command »")
 
 
 class PersonModel(object):

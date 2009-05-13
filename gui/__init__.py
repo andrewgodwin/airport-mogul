@@ -99,7 +99,7 @@ class Gui(DirectObject):
 	If 'texture' is none, will just generate a card instead.
 	offsetx and offsety specify the offset of the card; (0,0) means the card's origin is
 	at its top left corner."""
-
+        
         cm = CardMaker('card-%s' % texture)
         cm.setFrame(-(width*offsetx), (width*(1-offsetx)), -(height*offsety), (height*(1-offsety)))
         node = parent.attachNewNode(cm.generate())
@@ -113,11 +113,24 @@ class Gui(DirectObject):
                 tex = loader.loadTexture(texture)
             if tex is None:
                 raise ValueError("No texture found matching '%s'." % texture)
-
+            
             node.setTexture(tex)
             if transparent:
                 node.setTransparency(1)
         return node
+    
+    
+    _fonts = {}
+    
+    def load_font(self, name):
+        if name not in self._fonts:
+            font = loader.loadFont('%s.ttf' % name)
+            font.clear()
+            font.setPixelsPerUnit(15)
+            font.setScaleFactor(1)
+            font.setTextureMargin(2)
+            self._fonts[name] = font
+        return self._fonts[name]
 
 
 
